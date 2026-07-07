@@ -9,13 +9,18 @@ You should comment out all portions of your portfolio that you have not complete
 
 | **Engineer** | **School** | **Area of Interest** | **Grade** |
 |:--:|:--:|:--:|:--:|
-| Eddie K. | Cupertino High School | Electrical Engineering | Incoming Sophomore
+| Eddie K. | Cupertino High School | Bio-Engineering | Incoming Sophomore
 
 **Replace the BlueStamp logo below with an image of yourself and your completed project. Follow the guide [here](https://tomcam.github.io/least-github-pages/adding-images-github-pages-site.html) if you need help.**
 
 ![Headstone Image](logo.svg)
   
 # Final Milestone
+Assembling hardware and adding straps 
+Sensors such as vibration and beeps
+Walking / practical experiment
+Develop hand straps and hardware
+
 
 **Don't forget to replace the text below with the embedding for your milestone video. Go to Youtube, click Share -> Embed, and copy and paste the code to replace what's below.**
 
