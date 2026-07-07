@@ -55,8 +55,17 @@ For your second milestone, explain what you've worked on since your previous mil
 For your first milestone, describe what your project is and how you plan to build it. You can include:
 - An explanation about the different components of your project and how they will all integrate together
 - Technical progress you've made so far
+- Buzzer detection and distance sensoring with ultrasonic censors
+  
 - Challenges you're facing and solving in your future milestones
+- Actual soldering and implementation without breadboard
+- Permanent project building
+- Building multiple of the sensors
+
 - What your plan is to complete your project
+- Ask some help from AI for the code
+- Search online for the schematics
+- Ask help and double-confirm before soldering
 
 # Schematics 
 Here's where you'll put images of your schematics. [Tinkercad](https://www.tinkercad.com/blog/official-guide-to-tinkercad-circuits) and [Fritzing](https://fritzing.org/learning/) are both great resoruces to create professional schematic diagrams, though BSE recommends Tinkercad becuase it can be done easily and for free in the browser. 
@@ -65,15 +74,57 @@ Here's where you'll put images of your schematics. [Tinkercad](https://www.tinke
 Here's where you'll put your code. The syntax below places it into a block of code. Follow the guide [here]([url](https://www.markdownguide.org/extended-syntax/)) to learn how to customize it to your project needs. 
 
 ```c++
+// Pin Definitions
+const int trigPin = 9;
+const int echoPin = 10;
+const int buzzer = 5;
+const int motor = 6;
+
+// Detection threshold in cm
+const int threshold = 20;
+
 void setup() {
-  // put your setup code here, to run once:
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(buzzer, OUTPUT);
+  pinMode(motor, OUTPUT);
+  
+  // Start Serial to monitor distance
   Serial.begin(9600);
-  Serial.println("Hello World!");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  long duration, distance;
+  
+  // Clear the trigger pin
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  
+  // Send 10us pulse to trigger sensor
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  
+  // Calculate duration and distance
+  duration = pulseIn(echoPin, HIGH);
+  distance = (duration / 2) / 29.1;
+  
+  // Print distance to Serial Monitor for debugging
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
 
+  // Logic: Activate buzzer and motor if object is within threshold
+  if (distance > 0 && distance < threshold) {
+    digitalWrite(buzzer, HIGH);
+    digitalWrite(motor, HIGH);
+  } else {
+    digitalWrite(buzzer, LOW);
+    digitalWrite(motor, LOW);
+  }
+  
+  // Small delay to prevent sensor interference
+  delay(100);
 }
 ```
 
