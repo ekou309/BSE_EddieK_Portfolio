@@ -92,54 +92,70 @@ Here's where you'll put your code. The syntax below places it into a block of co
 // Pin Definitions
 const int trigPin = 9;
 const int echoPin = 10;
-const int buzzer = 5;
-const int motor = 6;
+const int buzzer = 4;      
+const int ledPin = 11;     
+const int btnLed = 2;
+const int btnBuzz = 3;
 
-// Detection threshold in cm
-const int threshold = 20;
+// Modes
+bool ledMode = false;
+bool buzzMode = false;
+
+// State Tracking
+bool lastBtnLed = HIGH;
+bool lastBtnBuzz = HIGH;
+unsigned long lastBeepTime = 0;
 
 void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+  pinMode(ledPin, OUTPUT);
   pinMode(buzzer, OUTPUT);
-  pinMode(motor, OUTPUT);
-  
-  // Start Serial to monitor distance
-  Serial.begin(9600);
+  pinMode(btnLed, INPUT_PULLUP);
+  pinMode(btnBuzz, INPUT_PULLUP);
 }
 
 void loop() {
-  long duration, distance;
-  
-  // Clear the trigger pin
+  // --- BUTTON TOGGLE LOGIC ---
+  if (digitalRead(btnLed) == LOW && lastBtnLed == HIGH) { ledMode = !ledMode; delay(50); }
+  lastBtnLed = digitalRead(btnLed);
+
+  if (digitalRead(btnBuzz) == LOW && lastBtnBuzz == HIGH) { buzzMode = !buzzMode; delay(50); }
+  lastBtnBuzz = digitalRead(btnBuzz);
+
+  // --- SENSING LOGIC (Non-Blocking) ---
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
-  
-  // Send 10us pulse to trigger sensor
   digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
   
-  // Calculate duration and distance
-  duration = pulseIn(echoPin, HIGH);
-  distance = (duration / 2) / 29.1;
-  
-  // Print distance to Serial Monitor for debugging
-  Serial.print("Distance: ");
-  Serial.print(distance);
-  Serial.println(" cm");
+  long duration = pulseIn(echoPin, HIGH, 30000); 
+  int distance = (duration == 0) ? 999 : (duration / 2) / 29.1;
 
-  // Logic: Activate buzzer and motor if object is within threshold
-  if (distance > 0 && distance < threshold) {
-    digitalWrite(buzzer, HIGH);
-    digitalWrite(motor, HIGH);
+  // --- OUTPUT LOGIC ---
+  if (distance > 0 && distance < 20) {
+    // LED: Variable Brightness
+    analogWrite(ledPin, ledMode ? map(constrain(distance, 1, 20), 1, 20, 255, 50) : 0);
+    
+    // Buzzer: Non-blocking Staccato Beep
+    if (buzzMode) {
+      int targetFreq = map(constrain(distance, 1, 20), 1, 20, 3000, 100);
+      int interval = map(constrain(distance, 1, 20), 1, 20, 50, 500);
+      
+      if (millis() - lastBeepTime >= interval) {
+        noTone(buzzer);       // "Note Break" to prevent clashing
+        delay(5);             // Tiny pause for hardware reset
+        tone(buzzer, targetFreq);
+        lastBeepTime = millis();
+      }
+    } else {
+      noTone(buzzer);
+    }
   } else {
-    digitalWrite(buzzer, LOW);
-    digitalWrite(motor, LOW);
+    analogWrite(ledPin, 0);
+    noTone(buzzer);
   }
-  
-  // Small delay to prevent sensor interference
-  delay(100);
 }
 ```
 
