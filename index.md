@@ -52,32 +52,36 @@ For your second milestone, explain what you've worked on since your previous mil
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/CaCazFBhYKs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
-For your first milestone, describe what your project is and how you plan to build it. You can include:
-- An explanation about the different components of your project and how they will all integrate together
-- Technical progress you've made so far
-- Buzzer detection and distance sensoring with ultrasonic censors
-  
-- Challenges you're facing and solving in your future milestones
-- Actual soldering and implementation without breadboard
-- Permanent project building
-- Building multiple of the sensors
+First Milestone Highlights:
 
-- What your plan is to complete your project
-- Ask some help from AI for the code
-- Search online for the schematics
-- Ask help and double-confirm before soldering
+Project: Third Eye for The Blind
+
+Progress:
+- Implemented three different components in correspondence with the ultrasonic sensors (LED, Buzzer, Vibration motor)
+- Soldered all wiring onto the official pref board 
+- Planned schematics for design
+- Developed coding on breadboard and tested for functiosn
+  
+Challenges:
+- Multimeter testing and real function testing on the pref board
+- Permanent project building with wearable design
+- Building multiple projects for both hands (maybe all limbs)
+
+Plans:
+- Record code process and design measurements on notebook
+- Search online for reference schematics
+- Ask help and double-confirm with instructors before making permanent decisions
 
 # Starter Project
 
-**Don't forget to replace the text below with the embedding for your milestone video. Go to Youtube, click Share -> Embed, and copy and paste the code to replace what's below.**
-
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Va0Sycy-55k?si=388BVatnQnXsj7uk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-For your second milestone, explain what you've worked on since your previous milestone. You can highlight:
-- Technical details of what you've accomplished and how they contribute to the final goal
-- What has been surprising about the project so far
-- Previous challenges you faced that you overcame
-- What needs to be completed before your final milestone 
+Starter Project Highlights:
+
+Progress:
+- Soldered RBG lights and sliders onto the board
+- Functions work as sliders combine
+
 
 # Schematics 
 Here's where you'll put images of your schematics. [Tinkercad](https://www.tinkercad.com/blog/official-guide-to-tinkercad-circuits) and [Fritzing](https://fritzing.org/learning/) are both great resoruces to create professional schematic diagrams, though BSE recommends Tinkercad becuase it can be done easily and for free in the browser. 
@@ -94,16 +98,20 @@ const int trigPin = 9;
 const int echoPin = 10;
 const int buzzer = 4;      
 const int ledPin = 11;     
+const int vibPin = 5;      // Added Vibration Motor Pin
 const int btnLed = 2;
 const int btnBuzz = 3;
+const int btnVib = 6;      // Added Pin for Vibration Button
 
 // Modes
 bool ledMode = false;
 bool buzzMode = false;
+bool vibMode = false;      // Added Vibration Mode
 
 // State Tracking
 bool lastBtnLed = HIGH;
 bool lastBtnBuzz = HIGH;
+bool lastBtnVib = HIGH;    // Added State tracking for Vib Button
 unsigned long lastBeepTime = 0;
 
 void setup() {
@@ -111,8 +119,10 @@ void setup() {
   pinMode(echoPin, INPUT);
   pinMode(ledPin, OUTPUT);
   pinMode(buzzer, OUTPUT);
+  pinMode(vibPin, OUTPUT); // Set Vib Pin as Output
   pinMode(btnLed, INPUT_PULLUP);
   pinMode(btnBuzz, INPUT_PULLUP);
+  pinMode(btnVib, INPUT_PULLUP); // Set Vib Button
 }
 
 void loop() {
@@ -123,7 +133,10 @@ void loop() {
   if (digitalRead(btnBuzz) == LOW && lastBtnBuzz == HIGH) { buzzMode = !buzzMode; delay(50); }
   lastBtnBuzz = digitalRead(btnBuzz);
 
-  // --- SENSING LOGIC (Non-Blocking) ---
+  if (digitalRead(btnVib) == LOW && lastBtnVib == HIGH) { vibMode = !vibMode; delay(50); }
+  lastBtnVib = digitalRead(btnVib);
+
+  // --- SENSING LOGIC ---
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -135,18 +148,19 @@ void loop() {
 
   // --- OUTPUT LOGIC ---
   if (distance > 0 && distance < 20) {
-    // LED: Variable Brightness
+    // LED
     analogWrite(ledPin, ledMode ? map(constrain(distance, 1, 20), 1, 20, 255, 50) : 0);
     
-    // Buzzer: Non-blocking Staccato Beep
+    // Vibration Motor: Proportional strength (analog)
+    // Note: If your motor isn't strong enough at low values, increase the minimum '50'
+    analogWrite(vibPin, vibMode ? map(constrain(distance, 1, 20), 1, 20, 255, 100) : 0);
+    
+    // Buzzer
     if (buzzMode) {
       int targetFreq = map(constrain(distance, 1, 20), 1, 20, 3000, 100);
       int interval = map(constrain(distance, 1, 20), 1, 20, 50, 500);
-      
       if (millis() - lastBeepTime >= interval) {
-        noTone(buzzer);       // "Note Break" to prevent clashing
-        delay(5);             // Tiny pause for hardware reset
-        tone(buzzer, targetFreq);
+        tone(buzzer, targetFreq, 50); // Simplified tone
         lastBeepTime = millis();
       }
     } else {
@@ -154,6 +168,7 @@ void loop() {
     }
   } else {
     analogWrite(ledPin, 0);
+    analogWrite(vibPin, 0);
     noTone(buzzer);
   }
 }
