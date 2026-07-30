@@ -97,21 +97,21 @@ Here's where you'll put your code. The syntax below places it into a block of co
 const int trigPin = 9;
 const int echoPin = 10;
 const int buzzer = 4;      
-const int ledPin = 11;     
-const int vibPin = 5;      // Added Vibration Motor Pin
+const int ledPin = 12;     
+const int vibPin = 5;      
 const int btnLed = 2;
 const int btnBuzz = 3;
-const int btnVib = 6;      // Added Pin for Vibration Button
+const int btnVib = 6;      
 
 // Modes
 bool ledMode = false;
 bool buzzMode = false;
-bool vibMode = false;      // Added Vibration Mode
+bool vibMode = false;      
 
 // State Tracking
 bool lastBtnLed = HIGH;
 bool lastBtnBuzz = HIGH;
-bool lastBtnVib = HIGH;    // Added State tracking for Vib Button
+bool lastBtnVib = HIGH;    
 unsigned long lastBeepTime = 0;
 
 void setup() {
@@ -119,14 +119,17 @@ void setup() {
   pinMode(echoPin, INPUT);
   pinMode(ledPin, OUTPUT);
   pinMode(buzzer, OUTPUT);
-  pinMode(vibPin, OUTPUT); // Set Vib Pin as Output
+  pinMode(vibPin, OUTPUT); 
   pinMode(btnLed, INPUT_PULLUP);
   pinMode(btnBuzz, INPUT_PULLUP);
-  pinMode(btnVib, INPUT_PULLUP); // Set Vib Button
+  pinMode(btnVib, INPUT_PULLUP); 
+
+  // STARTUP
+  playStartupSong();
 }
 
 void loop() {
-  // --- BUTTON TOGGLE LOGIC ---
+  // BUTTON
   if (digitalRead(btnLed) == LOW && lastBtnLed == HIGH) { ledMode = !ledMode; delay(50); }
   lastBtnLed = digitalRead(btnLed);
 
@@ -136,7 +139,7 @@ void loop() {
   if (digitalRead(btnVib) == LOW && lastBtnVib == HIGH) { vibMode = !vibMode; delay(50); }
   lastBtnVib = digitalRead(btnVib);
 
-  // --- SENSING LOGIC ---
+  // SENSING
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -146,37 +149,49 @@ void loop() {
   long duration = pulseIn(echoPin, HIGH, 30000); 
   int distance = (duration == 0) ? 999 : (duration / 2) / 29.1;
 
-  // --- OUTPUT LOGIC ---
+  // OUTPUT
   if (distance > 0 && distance < 20) {
-    // LED
-    analogWrite(ledPin, ledMode ? map(constrain(distance, 1, 20), 1, 20, 255, 50) : 0);
-    
-    // Vibration Motor: Proportional strength (analog)
-    // Note: If your motor isn't strong enough at low values, increase the minimum '50'
+    digitalWrite(ledPin, ledMode ? HIGH : LOW);
     analogWrite(vibPin, vibMode ? map(constrain(distance, 1, 20), 1, 20, 255, 100) : 0);
     
-    // Buzzer
     if (buzzMode) {
       int targetFreq = map(constrain(distance, 1, 20), 1, 20, 3000, 100);
       int interval = map(constrain(distance, 1, 20), 1, 20, 50, 500);
+      
       if (millis() - lastBeepTime >= interval) {
-        tone(buzzer, targetFreq, 50); // Simplified tone
+        noTone(buzzer);       // Clear any tone
+        delay(5);             // Hardware reset window
+        tone(buzzer, targetFreq, 40); // Play new tone
         lastBeepTime = millis();
       }
     } else {
       noTone(buzzer);
     }
   } else {
-    analogWrite(ledPin, 0);
+    digitalWrite(ledPin, LOW);
     analogWrite(vibPin, 0);
     noTone(buzzer);
   }
 }
+
+// STARTUP SONG
+void playStartupSong() {
+  int notes[] = { 150, 659, 784, 1046 }; 
+  int durations[] = { 120, 120, 120, 250 }; 
+
+  for (int i = 0; i < 4; i++) {
+    tone(buzzer, notes[i], durations[i]);
+    delay(durations[i] + 120); 
+  }
+  
+  // Force cutoff
+  noTone(buzzer); 
+  delay(200); // Short pause before enabling sensor monitoring
+}
 ```
 
 # Bill of Materials
-Here's where you'll list the parts in your project. To add more rows, just copy and paste the example rows below.
-Don't forget to place the link of where to buy each component inside the quotation marks in the corresponding row after href =. Follow the guide [here]([url](https://www.markdownguide.org/extended-syntax/)) to learn how to customize this to your project needs. 
+Here's where you'll list the parts in your project.
 
 | **Part** | **Note** | **Price** | **Link** |
 |:--:|:--:|:--:|:--:|
